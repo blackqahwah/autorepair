@@ -1,12 +1,11 @@
-// server/api/jobs/[id].patch.ts
-import { db } from '../../utils/store'
 import { calculateEstimate } from '../../utils/estimate'
+import {prisma} from '../../utils/db'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
   const body = await readBody(event)
 
-  const job = db.jobs.find(j => j.id === id)
+const job = await prisma.job.findUnique({ where: { id } })
   if (!job) throw createError({ statusCode: 404 })
 
   // If parts are being updated, recalculate estimate
@@ -14,7 +13,12 @@ export default defineEventHandler(async (event) => {
     body.estimate = calculateEstimate(body.parts)
   }
 
-  Object.assign(job, body)
-
-  return job
+   return prisma.job.update({
+    where: { id },
+    data: body,
+  })
 })
+
+
+
+

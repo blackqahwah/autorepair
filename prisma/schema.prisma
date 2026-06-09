@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Booking {
+  id            String        @id @default(uuid())
+  customerName  String
+  car           String
+  date          String
+  status        BookingStatus @default(PENDING)
+  invoiceItems  InvoiceItem[]
+  invoiceTotal  Float?
+  paymentStatus PaymentStatus @default(UNPAID)
+  paymentMethod PaymentMethod?
+  createdAt     DateTime      @default(now())
+}
+
+model InvoiceItem {
+  id        String  @id @default(uuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id])
+  name      String
+  price     Float
+  quantity  Int
+}
+
+model Customer {
+  id    String  @id @default(uuid())
+  name  String
+  phone String?
+  email String?
+  jobs  Job[]
+}
+
+model Job {
+  id           String    @id @default(uuid())
+  customerId   String
+  customer     Customer  @relation(fields: [customerId], references: [id])
+  vehicleMake  String
+  vehicleModel String
+  registration String
+  status       JobStatus @default(BOOKED)
+  estimate     Float?
+  invoice      Float?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  parts        Part[]
+}
+
+model Part {
+  id       String @id @default(uuid())
+  jobId    String
+  job      Job    @relation(fields: [jobId], references: [id])
+  name     String
+  price    Float
+  quantity Int
+}
+
+model AvailableDate {
+  id       String @id @default(uuid())
+  date     String @unique
+  capacity Int    @default(5)
+}
+
+enum BookingStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  PAY_ONSITE
+}
+
+enum PaymentMethod {
+  ONLINE
+  ONSITE
+}
+
+enum JobStatus {
+  BOOKED
+  JOB_CARD_CREATED
+  IN_PROGRESS
+  AWAITING_PARTS
+  ESTIMATE_SENT
+  APPROVED
+  INVOICED
+  READY_FOR_PICKUP
+  COMPLETED
+}

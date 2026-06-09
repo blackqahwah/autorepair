@@ -1,33 +1,32 @@
-// server/api/bookings.post.ts
-import { db } from '../../utils/store'
+// server/api/bookings/index.post.ts
+import { prisma } from '../../utils/db'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
 
-  const booking = {
-    id: crypto.randomUUID(),
-    customerName: body.customerName,
-    car: body.car,
-    date: body.date,
-    status: 'BOOKED',
+  // decrement capacity for chosen date
+  const availableDate = await prisma.availableDate.findUnique({
+    where: { date: body.date },
+  })
+
+  if (!availableDate || availableDate.capacity <= 0) {
+    throw createError({ statusCode: 400, message: 'No slots available for this date' })
   }
 
-  db.bookings.push(booking)
+  await prisma.availableDate.update({
+    where: { date: body.date },
+    data: { capacity: { decrement: 1 } },
+  })
 
-  const job = {
-    id: crypto.randomUUID(),
-    bookingId: booking.id,
-    customerName: booking.customerName,
-    car: booking.car,
-    date: booking.date,
-    status: 'JOB_CARD_CREATED',
-    technicianNotes: '',
-    parts: [],
-    estimate: 0,
-    invoice: null,
-  }
-
-  db.jobs.push(job)
+  const booking = await prisma.booking.create({
+    data: {
+      customerName: body.customerName,
+      car: body.car,
+      date: body.date,
+      status: 'PENDING',
+    },
+    include: { invoiceItems: true },
+  })
 
   return booking
 })

@@ -1,5 +1,5 @@
-import { db } from '../../utils/store'
+import { prisma } from '../../utils/db'
 
-export default defineEventHandler(() => {
-  return db.jobs
+export default defineEventHandler(async () => {
+  return prisma.job.findMany()
 })

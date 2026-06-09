@@ -1,19 +1,15 @@
-// server/api/jobs.post.ts
-import { db } from '../../utils/store'
+import { prisma } from '../../utils/db'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
 
-  const job = {
-    id: crypto.randomUUID(),
-    bookingId: body.bookingId,
-    status: 'JOB_CARD_CREATED',
-    technicianNotes: '',
-    parts: [],
-    estimate: 0,
-    invoice: null,
-  }
-
-  db.jobs.push(job)
-  return job
+  return prisma.job.create({
+    data: {
+      customerId: body.customerId,
+      vehicleMake: body.vehicleMake ?? body.car,
+      vehicleModel: body.vehicleModel ?? '',
+      registration: body.registration ?? '',
+      status: 'JOB_CARD_CREATED',
+    }
+  })
 })

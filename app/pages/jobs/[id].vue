@@ -2,8 +2,9 @@
 const route = useRoute()
 const jobId = route.params.id
 
-const { data: job, refresh } = await useFetch(`/api/jobs/${jobId}`)
-
+const { data: job, pending, error } = await useFetch(
+  `/api/jobs/${route.params.id}`
+)
 const newStatus = ref('')
 const partsInput = ref('')
 
